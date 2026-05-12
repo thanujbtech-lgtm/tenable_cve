@@ -273,20 +273,80 @@ def main():
             ignore_index=True
         )
 
-        final_df.to_excel(
-            OUTPUT_FILE,
-            index=False
-        )
-
-        print("\n" + "=" * 60)
-        print("NEW ROWS ADDED :", len(new_rows))
-        print("TOTAL ROWS     :", len(final_df))
-        print("EXCEL UPDATED  :", OUTPUT_FILE)
-        print("=" * 60)
-
     else:
 
         print("\nNo new rows found")
+
+        final_df = existing_df
+
+    # =========================================================
+    # REMOVE DUPLICATES
+    # =========================================================
+
+    final_df = final_df.drop_duplicates(
+        subset=[
+            "CVE",
+            "DATE",
+            "ADVISORY_ID"
+        ],
+        keep="first"
+    )
+
+    # =========================================================
+    # CONVERT DATE COLUMN
+    # =========================================================
+
+    final_df["DATE_OBJ"] = pd.to_datetime(
+        final_df["DATE"],
+        errors="coerce"
+    )
+
+    # =========================================================
+    # SORT OLDEST -> NEWEST
+    # Oldest rows at TOP
+    # Newest rows at BOTTOM
+    # =========================================================
+
+    final_df = final_df.sort_values(
+        by="DATE_OBJ",
+        ascending=True
+    )
+
+    # =========================================================
+    # DROP TEMP COLUMN
+    # =========================================================
+
+    final_df = final_df.drop(
+        columns=["DATE_OBJ"]
+    )
+
+    # =========================================================
+    # RESET INDEX
+    # =========================================================
+
+    final_df = final_df.reset_index(
+        drop=True
+    )
+
+    # =========================================================
+    # SAVE EXCEL
+    # =========================================================
+
+    final_df.to_excel(
+        OUTPUT_FILE,
+        index=False
+    )
+
+    # =========================================================
+    # FINAL STATUS
+    # =========================================================
+
+    print("\n" + "=" * 60)
+    print("TOTAL ROWS     :", len(final_df))
+    print("EXCEL UPDATED  :", OUTPUT_FILE)
+    print("OLDEST POSTS   : TOP")
+    print("NEWEST POSTS   : BOTTOM")
+    print("=" * 60)
 
 # =========================================================
 # RUN
